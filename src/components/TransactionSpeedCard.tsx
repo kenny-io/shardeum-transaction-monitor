@@ -1,0 +1,92 @@
+import { useState, useEffect } from 'react';
+import { Clock } from 'lucide-react';
+
+interface SpeedMetrics {
+  averageConfirmationTime: number;
+  fastestTransaction: number;
+  slowestTransaction: number;
+  pendingTransactions: number;
+}
+
+export function TransactionSpeedCard() {
+  const [metrics, setMetrics] = useState<SpeedMetrics | null>(null);
+
+  useEffect(() => {
+    const fetchMetrics = async () => {
+      try {
+        const response = await fetch('http://localhost:3000/api/metrics/speed');
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        const data = await response.json();
+        console.log('Speed metrics response:', data);
+        setMetrics(data);
+      } catch (error) {
+        console.error('Failed to fetch speed metrics:', error);
+      }
+    };
+
+    fetchMetrics();
+    // Update more frequently during debugging
+    const interval = setInterval(fetchMetrics, 10000);
+    return () => clearInterval(interval);
+  }, []);
+
+  if (!metrics) {
+    return (
+      <div className="bg-white rounded-lg shadow p-6 h-[200px] flex items-center justify-center">
+        <div className="animate-pulse text-gray-400">Loading speed metrics...</div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="bg-white rounded-lg shadow p-6">
+      <div className="flex items-center mb-4">
+        <Clock className="h-6 w-6 text-indigo-600 mr-2" />
+        <h2 className="text-lg font-semibold text-gray-900">Transaction Speed</h2>
+      </div>
+
+      <div className="grid grid-cols-2 gap-4">
+        <div className="bg-emerald-50 rounded-lg p-4">
+          <div className="text-sm font-medium text-emerald-700">Average Confirmation</div>
+          <div className="mt-2">
+            <span className="text-2xl font-semibold text-emerald-700">
+              {metrics.averageConfirmationTime.toFixed(2)}
+            </span>
+            <span className="text-sm text-emerald-600 ml-1">seconds</span>
+          </div>
+        </div>
+
+        <div className="bg-amber-50 rounded-lg p-4">
+          <div className="text-sm font-medium text-amber-700">Pending Transactions</div>
+          <div className="mt-2">
+            <span className="text-2xl font-semibold text-amber-700">
+              {metrics.pendingTransactions}
+            </span>
+          </div>
+        </div>
+
+        <div className="bg-green-50 rounded-lg p-4">
+          <div className="text-sm font-medium text-green-700">Fastest Transaction</div>
+          <div className="mt-2">
+            <span className="text-2xl font-semibold text-green-700">
+              {metrics.fastestTransaction.toFixed(2)}
+            </span>
+            <span className="text-sm text-green-600 ml-1">seconds</span>
+          </div>
+        </div>
+
+        <div className="bg-red-50 rounded-lg p-4">
+          <div className="text-sm font-medium text-red-700">Slowest Transaction</div>
+          <div className="mt-2">
+            <span className="text-2xl font-semibold text-red-700">
+              {metrics.slowestTransaction.toFixed(2)}
+            </span>
+            <span className="text-sm text-red-600 ml-1">seconds</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+} 
