@@ -1,13 +1,27 @@
-version: '3.8'
+version: '3.3'
 
 services:
+  prometheus:
+    image: prom/prometheus:latest
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./prometheus.yml:/etc/prometheus/prometheus.yml
+      - prometheus_data_monitor:/prometheus
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--web.console.libraries=/usr/share/prometheus/console_libraries'
+      - '--web.console.templates=/usr/share/prometheus/consoles'
+    networks:
+      - monitor-network
+
   app:
-    build: 
+    build:
       context: .
       dockerfile: Dockerfile
     ports:
       - "3000:3000"
-      - "5173:5173"  # Expose Vite dev server port
     environment:
       - NODE_ENV=production
       - SHARDEUM_RPC_URL=${SHARDEUM_RPC_URL}
@@ -18,28 +32,17 @@ services:
       - TRANSACTION_AMOUNT=${TRANSACTION_AMOUNT}
       - MONITOR_INTERVAL=${MONITOR_INTERVAL}
       - PORT=3000
-      - VITE_API_URL=/api  # Use relative path for API
+      - VITE_API_URL=/api
+      - PROMETHEUS_URL=http://prometheus:9090
+    depends_on:
+      - prometheus
+    restart: unless-stopped
     networks:
       - monitor-network
-
-  prometheus:
-    image: prom/prometheus:latest
-    ports:
-      - "9090:9090"
-    volumes:
-      - ./prometheus.yml:/etc/prometheus/prometheus.yml
-      - prometheus_data:/prometheus
-    command:
-      - '--config.file=/etc/prometheus/prometheus.yml'
-      - '--storage.tsdb.path=/prometheus'
-      - '--web.console.libraries=/usr/share/prometheus/console_libraries'
-      - '--web.console.templates=/usr/share/prometheus/consoles'
-    networks:
-      - monitor-network
-
-volumes:
-  prometheus_data:
 
 networks:
   monitor-network:
     driver: bridge
+
+volumes:
+  prometheus_data_monitor:
