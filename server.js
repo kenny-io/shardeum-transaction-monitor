@@ -1,97 +1,103 @@
-const express = require('express');
-const cors = require('cors');
-const promClient = require('prom-client');
-const { TransactionMonitor } = require('./src/services/TransactionMonitor');
+import express from 'express';
+import cors from 'cors';
+import { TransactionMonitor } from './src/services/TransactionMonitor.js';
+import { Registry } from 'prom-client';
+import dotenv from 'dotenv';
+import path from 'path';
+import { fileURLToPath } from 'url';
+
+dotenv.config();
 
 const app = express();
+const router = express.Router();  // Create router
 const port = process.env.PORT || 3000;
-
-// Initialize Prometheus registry
-const register = new promClient.Registry();
-
-// Initialize transaction monitor
+const register = new Registry();
 const monitor = new TransactionMonitor(register);
 
-// CORS configuration
-const corsOptions = {
-  origin: [
-    'http://34.18.31.242:3000',     // Production frontend
-    'http://localhost:3000',         // Local frontend
-    'http://localhost:5173'          // Vite dev server
-  ],
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+// Update CORS setup to be more permissive in development
+app.use(cors({
+  origin: '*', // Be careful with this in production
   methods: ['GET', 'POST'],
-  credentials: true,
-  optionsSuccessStatus: 200
-};
+  allowedHeaders: ['Content-Type']
+}));
+app.use(express.json());
 
-app.use(cors(corsOptions));
-
-// API routes
-app.get('/api/metrics/confirmation-times', async (req, res) => {
-  try {
-    const times = monitor.getConfirmationTimes();
-    res.json(times);
-  } catch (error) {
-    console.error('Error fetching confirmation times:', error);
-    res.status(500).json({ error: 'Internal server error' });
-  }
+// Health check endpoint
+app.get('/health', (req, res) => {
+  res.json({ status: 'ok' });
 });
 
-app.get('/api/metrics/transaction-counts', async (req, res) => {
-  try {
-    const counts = monitor.getTransactionCounts();
-    res.json(counts);
-  } catch (error) {
-    console.error('Error fetching transaction counts:', error);
-    res.status(500).json({ error: 'Internal server error' });
-  }
-});
-
-app.get('/api/metrics/gas', async (req, res) => {
-  try {
-    const gasMetrics = {
-      averagePrice: monitor.getAverageGasPrice(),
-      totalUsed: monitor.getTotalGasUsed()
-    };
-    res.json(gasMetrics);
-  } catch (error) {
-    console.error('Error fetching gas metrics:', error);
-    res.status(500).json({ error: 'Internal server error' });
-  }
-});
-
-app.get('/api/metrics/speed', async (req, res) => {
-  try {
-    const speedMetrics = {
-      average: monitor.getAverageConfirmationTime(),
-      fastest: monitor.getFastestTransaction(),
-      slowest: monitor.getSlowestTransaction(),
-      pending: monitor.getPendingTransactionCount()
-    };
-    res.json(speedMetrics);
-  } catch (error) {
-    console.error('Error fetching speed metrics:', error);
-    res.status(500).json({ error: 'Internal server error' });
-  }
-});
+// Centralized error handler
+const asyncHandler = fn => (req, res, next) =>
+  Promise.resolve(fn(req, res, next)).catch(next);
 
 // Prometheus metrics endpoint
-app.get('/metrics', async (req, res) => {
-  try {
-    res.set('Content-Type', register.contentType);
-    res.end(await register.metrics());
-  } catch (error) {
-    console.error('Error generating metrics:', error);
-    res.status(500).end();
-  }
+app.get('/metrics', asyncHandler(async (req, res) => {
+  res.set('Content-Type', register.contentType);
+  res.end(await register.metrics());
+}));
+
+// API endpoints with error handling
+router.get('/metrics/confirmation-times', asyncHandler(async (req, res) => {
+  res.json(monitor.getConfirmationTimes());
+}));
+
+router.get('/metrics/transaction-counts', asyncHandler(async (req, res) => {
+  res.json(monitor.getTransactionCounts());
+}));
+
+router.get('/metrics/gas', asyncHandler(async (req, res) => {
+  const avgGasPrice = monitor.getAverageGasPrice();
+  const totalGasUsed = monitor.getTotalGasUsed();
+  
+  res.json({
+    averageGasPrice: avgGasPrice,
+    totalGasUsed: totalGasUsed
+  });
+}));
+
+router.get('/metrics/speed', asyncHandler(async (req, res) => {
+  res.json({
+    averageConfirmationTime: monitor.getAverageConfirmationTime(),
+    fastestTransaction: monitor.getFastestTransaction(),
+    slowestTransaction: monitor.getSlowestTransaction(),
+    pendingTransactions: monitor.getPendingTransactionCount()
+  });
+}));
+
+// Mount API routes
+app.use('/api', router);
+
+// Serve static files from the React app
+app.use(express.static(path.join(__dirname, 'dist')));
+
+// The "catchall" handler: for any request that doesn't
+// match one above, send back React's index.html file.
+app.get('*', (req, res) => {
+  res.sendFile(path.join(__dirname, 'dist', 'index.html'));
 });
 
-// Start the monitor and server
-monitor.start().then(() => {
-  app.listen(port, () => {
-    console.log(`Server running on port ${port}`);
+// Error handling middleware
+app.use((err, req, res, next) => {
+  console.error('Error:', err.message);
+  res.status(500).json({ 
+    error: process.env.NODE_ENV === 'production' ? 'Internal Server Error' : err.message 
   });
-}).catch(error => {
-  console.error('Failed to start monitor:', error);
-  process.exit(1);
 });
+
+// Graceful shutdown
+const gracefulShutdown = () => {
+  console.log('Received shutdown signal. Closing server...');
+  monitor.stop();
+  process.exit(0);
+};
+
+process.on('SIGTERM', gracefulShutdown);
+process.on('SIGINT', gracefulShutdown);
+
+// Start monitor and server
+monitor.start().catch(console.error);
+app.listen(port, () => console.log(`Server running on port ${port}`));

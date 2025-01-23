@@ -6,19 +6,17 @@ interface GasMetrics {
   totalGasUsed: number;
 }
 
+const API_URL = process.env.NODE_ENV === 'production' 
+  ? `${import.meta.env.VITE_API_URL}`
+  : 'http://localhost:3000/api';
 
-export function GasMetricsCard({ apiUrl }: { apiUrl: string }) {
+export function GasMetricsCard() {
   const [metrics, setMetrics] = useState<GasMetrics | null>(null);
 
   useEffect(() => {
     const fetchMetrics = async () => {
       try {
-        const response = await fetch(`${apiUrl}/metrics/gas`, {
-          credentials: 'include',
-          headers: {
-            'Content-Type': 'application/json'
-          }
-        });
+        const response = await fetch(`${API_URL}/metrics/gas`);
         if (!response.ok) {
           throw new Error(`HTTP error! status: ${response.status}`);
         }
@@ -98,4 +96,4 @@ export function GasMetricsCard({ apiUrl }: { apiUrl: string }) {
       </div>
     </div>
   );
-}
+} 

@@ -1,15 +1,13 @@
-# Build stage
+ # Build stage
 FROM node:18-alpine as builder
 
 WORKDIR /app
 COPY package*.json ./
 RUN npm install
-
-# Add build arg
-ARG VITE_API_URL
-ENV VITE_API_URL=${VITE_API_URL}
-
 COPY . .
+
+# Build frontend
+ENV VITE_API_URL=/api
 RUN npm run build
 
 # Production stage
@@ -21,6 +19,7 @@ RUN npm install --production
 COPY --from=builder /app/dist ./dist
 COPY server.js .
 COPY src/services ./src/services
+COPY prometheus.yml /etc/prometheus/prometheus.yml
 
 ENV NODE_ENV=production
 EXPOSE 3000

@@ -8,18 +8,13 @@ interface SpeedMetrics {
   pendingTransactions: number;
 }
 
-export function TransactionSpeedCard({ apiUrl }: { apiUrl: string }) {
+export function TransactionSpeedCard() {
   const [metrics, setMetrics] = useState<SpeedMetrics | null>(null);
 
   useEffect(() => {
     const fetchMetrics = async () => {
       try {
-        const response = await fetch(`${apiUrl}/metrics/speed`, {
-          credentials: 'include',
-          headers: {
-            'Content-Type': 'application/json'
-          }
-        });
+        const response = await fetch('http://localhost:3000/api/metrics/speed');
         if (!response.ok) {
           throw new Error(`HTTP error! status: ${response.status}`);
         }
