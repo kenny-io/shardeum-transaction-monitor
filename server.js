@@ -17,8 +17,12 @@ const monitor = new TransactionMonitor(register);
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-// Simplified CORS setup
-app.use(cors());
+// Update CORS setup to be more permissive in development
+app.use(cors({
+  origin: '*', // Be careful with this in production
+  methods: ['GET', 'POST'],
+  allowedHeaders: ['Content-Type']
+}));
 app.use(express.json());
 
 // Health check endpoint

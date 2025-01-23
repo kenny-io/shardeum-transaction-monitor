@@ -32,8 +32,9 @@ services:
       - TRANSACTION_AMOUNT=${TRANSACTION_AMOUNT}
       - MONITOR_INTERVAL=${MONITOR_INTERVAL}
       - PORT=3000
-      - VITE_API_URL=/api
+      - VITE_API_URL=${VITE_PUBLIC_API_URL}/api
       - PROMETHEUS_URL=http://prometheus:9090
+      - CORS_ORIGIN=*
     depends_on:
       - prometheus
     restart: unless-stopped

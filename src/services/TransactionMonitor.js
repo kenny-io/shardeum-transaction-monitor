@@ -100,8 +100,10 @@ export class TransactionMonitor {
 
   async sendMonitoringTransaction() {
     try {
+      console.log('Attempting to send monitoring transaction...');
       const { signer, receiverAddress } = this.getCurrentWallet();
       const gasPrice = await this.provider.getFeeData();
+      console.log('Current gas price:', ethers.formatUnits(gasPrice.gasPrice, "gwei"), 'Gwei');
       
       const tx = {
         to: receiverAddress,
@@ -111,11 +113,13 @@ export class TransactionMonitor {
         maxPriorityFeePerGas: gasPrice.maxPriorityFeePerGas
       };
 
+      console.log('Sending transaction to:', receiverAddress);
       const startTime = Date.now();
       const transaction = await signer.sendTransaction(tx);
+      console.log('Transaction sent:', transaction.hash);
       
       this.pendingTxs.set(transaction.hash, { 
-        startTime, 
+        startTime,
         status: 'pending',
         gasPrice: gasPrice.gasPrice
       });
