@@ -37,12 +37,12 @@ services:
     networks:
       - monitor-network
 
-frontend:
-  build:
-    context: .
-    dockerfile: Dockerfile.frontend
-    args:
-      - VITE_PUBLIC_API_URL=http://34.18.31.242:3001/api  # Update this to your deployed backend URL
+  frontend:
+    build:
+      context: .
+      dockerfile: Dockerfile.frontend
+      args:
+        - VITE_PUBLIC_API_URL=http://34.18.31.242:3001/api  # Update this to your deployed backend URL
     ports:
       - "3000:3000"
     environment:
