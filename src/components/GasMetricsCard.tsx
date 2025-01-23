@@ -37,7 +37,7 @@ export function GasMetricsCard() {
 
   if (!metrics) {
     return (
-      <div className="bg-white rounded-lg shadow p-6 h-[200px] flex items-center justify-center">
+      <div className="bg-white dark:bg-gray-800 shadow rounded-lg p-6 h-[200px] flex items-center justify-center">
         <div className="animate-pulse text-gray-400">Loading gas metrics...</div>
       </div>
     );
@@ -58,33 +58,37 @@ export function GasMetricsCard() {
   };
 
   return (
-    <div className="bg-white rounded-lg shadow p-6">
+    <div className="bg-white dark:bg-gray-800 shadow rounded-lg p-6">
       <div className="flex items-center mb-4">
-        <Fuel className="h-6 w-6 text-indigo-600 mr-2" />
-        <h2 className="text-lg font-semibold text-gray-900">Gas Metrics</h2>
+        <Fuel className="h-6 w-6 text-indigo-600 dark:text-indigo-400 mr-2" />
+        <h2 className="text-lg font-semibold text-gray-900 dark:text-white">Gas Metrics</h2>
       </div>
       
       <div className="grid grid-cols-2 gap-4">
-        <div className="bg-purple-50 rounded-lg p-4">
-          <div className="text-sm font-medium text-purple-700">Average Gas Price</div>
+        <div className="bg-purple-50 dark:bg-purple-900/20 rounded-lg p-4">
+          <div className="text-sm font-medium text-purple-700 dark:text-purple-300">
+            Average Gas Price
+          </div>
           <div className="mt-2">
-            <span className="text-2xl font-semibold text-purple-700">
+            <span className="text-2xl font-semibold text-purple-700 dark:text-purple-300">
               {formatGasValue(metrics.averageGasPrice)}
             </span>
-            <span className="text-sm text-purple-600 ml-1">nano Gwei</span>
+            <span className="text-sm text-purple-600 dark:text-purple-400 ml-1">
+              nano Gwei
+            </span>
           </div>
           <div className="text-xs text-purple-500 mt-1">
             ≈ {(metrics.averageGasPrice / 1e9).toFixed(9)} Gwei
           </div>
         </div>
 
-        <div className="bg-indigo-50 rounded-lg p-4">
-          <div className="text-sm font-medium text-indigo-700">Total Gas Used</div>
+        <div className="bg-indigo-50 dark:bg-indigo-900/20 rounded-lg p-4">
+          <div className="text-sm font-medium text-indigo-700 dark:text-indigo-300">Total Gas Used</div>
           <div className="mt-2">
-            <span className="text-2xl font-semibold text-indigo-700">
+            <span className="text-2xl font-semibold text-indigo-700 dark:text-indigo-300">
               {formatGasValue(metrics.totalGasUsed)}
             </span>
-            <span className="text-sm text-indigo-600 ml-1">nano Gwei</span>
+            <span className="text-sm text-indigo-600 dark:text-indigo-400 ml-1">nano Gwei</span>
           </div>
           <div className="text-xs text-indigo-500 mt-1">
             ≈ {(metrics.totalGasUsed / 1e9).toFixed(9)} Gwei

@@ -35,56 +35,64 @@ export function TransactionSpeedCard() {
 
   if (!metrics) {
     return (
-      <div className="bg-white rounded-lg shadow p-6 h-[200px] flex items-center justify-center">
+      <div className="bg-white dark:bg-gray-800 shadow rounded-lg p-6 h-[200px] flex items-center justify-center">
         <div className="animate-pulse text-gray-400">Loading speed metrics...</div>
       </div>
     );
   }
 
   return (
-    <div className="bg-white rounded-lg shadow p-6">
+    <div className="bg-white dark:bg-gray-800 shadow rounded-lg p-6">
       <div className="flex items-center mb-4">
-        <Clock className="h-6 w-6 text-indigo-600 mr-2" />
-        <h2 className="text-lg font-semibold text-gray-900">Transaction Speed</h2>
+        <Clock className="h-6 w-6 text-indigo-600 dark:text-indigo-400 mr-2" />
+        <h2 className="text-lg font-semibold text-gray-900 dark:text-white">Transaction Speed</h2>
       </div>
 
       <div className="grid grid-cols-2 gap-4">
-        <div className="bg-emerald-50 rounded-lg p-4">
-          <div className="text-sm font-medium text-emerald-700">Average Confirmation</div>
+        <div className="bg-emerald-50 dark:bg-emerald-900/20 rounded-lg p-4">
+          <div className="text-sm font-medium text-emerald-700 dark:text-emerald-300">
+            Average Confirmation
+          </div>
           <div className="mt-2">
-            <span className="text-2xl font-semibold text-emerald-700">
+            <span className="text-2xl font-semibold text-emerald-700 dark:text-emerald-300">
               {metrics.averageConfirmationTime.toFixed(2)}
             </span>
-            <span className="text-sm text-emerald-600 ml-1">seconds</span>
+            <span className="text-sm text-emerald-600 dark:text-emerald-400 ml-1">seconds</span>
           </div>
         </div>
 
-        <div className="bg-amber-50 rounded-lg p-4">
-          <div className="text-sm font-medium text-amber-700">Pending Transactions</div>
+        <div className="bg-amber-50 dark:bg-amber-900/20 rounded-lg p-4">
+          <div className="text-sm font-medium text-amber-700 dark:text-amber-300">
+            Pending Transactions
+          </div>
           <div className="mt-2">
-            <span className="text-2xl font-semibold text-amber-700">
+            <span className="text-2xl font-semibold text-amber-700 dark:text-amber-300">
               {metrics.pendingTransactions}
             </span>
           </div>
         </div>
 
-        <div className="bg-green-50 rounded-lg p-4">
-          <div className="text-sm font-medium text-green-700">Fastest Transaction</div>
+        <div className="bg-green-50 dark:bg-green-900/20 rounded-lg p-4">
+          <div className="text-sm font-medium text-green-700 dark:text-green-300">
+            Fastest Transaction
+          </div>
           <div className="mt-2">
-            <span className="text-2xl font-semibold text-green-700">
+            <span className="text-2xl font-semibold text-green-700 dark:text-green-300">
               {metrics.fastestTransaction.toFixed(2)}
             </span>
-            <span className="text-sm text-green-600 ml-1">seconds</span>
+            <span className="text-sm text-green-600 dark:text-green-400 ml-1">seconds</span>
           </div>
         </div>
 
-        <div className="bg-red-50 rounded-lg p-4">
-          <div className="text-sm font-medium text-red-700">Slowest Transaction</div>
+        <div className="bg-red-50 dark:bg-red-900/20 rounded-lg p-4">
+          <div className="text-sm font-medium text-red-700 dark:text-red-300">
+            Slowest Transaction
+          </div>
           <div className="mt-2">
-            <span className="text-2xl font-semibold text-red-700">
+            <span className="text-2xl font-semibold text-red-700 dark:text-red-300">
               {metrics.slowestTransaction.toFixed(2)}
             </span>
-            <span className="text-sm text-red-600 ml-1">seconds</span>
+            <span className="text-sm text-red-600 dark:text-red-400 ml-1">seconds</span>
           </div>
         </div>
       </div>
