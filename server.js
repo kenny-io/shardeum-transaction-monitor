@@ -19,18 +19,10 @@ const __dirname = path.dirname(__filename);
 
 // Update CORS setup to be more specific
 app.use(cors({
-  origin: [
-    'http://34.18.31.242:3000',
-    'http://localhost:3000',
-    'http://localhost:5173'
-  ],
+  origin: ['http://34.18.31.242:3000'],  // Frontend URL
   methods: ['GET', 'POST', 'OPTIONS'],
-  credentials: true,
-  allowedHeaders: ['Content-Type', 'Authorization']
+  credentials: false  // Change to false since we don't need credentials
 }));
-
-// Add preflight handling
-app.options('*', cors());
 
 app.use(express.json());
 
