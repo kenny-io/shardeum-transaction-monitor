@@ -17,12 +17,21 @@ const monitor = new TransactionMonitor(register);
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-// Update CORS setup to be more permissive in development
+// Update CORS setup to be more specific
 app.use(cors({
-  origin: '*', // Be careful with this in production
-  methods: ['GET', 'POST'],
-  allowedHeaders: ['Content-Type']
+  origin: [
+    'http://34.18.31.242:3000',
+    'http://localhost:3000',
+    'http://localhost:5173'
+  ],
+  methods: ['GET', 'POST', 'OPTIONS'],
+  credentials: true,
+  allowedHeaders: ['Content-Type', 'Authorization']
 }));
+
+// Add preflight handling
+app.options('*', cors());
+
 app.use(express.json());
 
 // Health check endpoint
