@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { CheckCircle2, XCircle, PieChart } from 'lucide-react';
-
+import { API_URL } from '../config/api';
 interface TransactionCounts {
   success: number;
   failure: number;
@@ -14,7 +14,7 @@ export function SuccessRateCard() {
   useEffect(() => {
     const fetchStats = async () => {
       try {
-        const response = await fetch('http://localhost:3000/api/metrics/transaction-counts');
+        const response = await fetch(`${API_URL}/metrics/transaction-counts`);
         const data = await response.json();
         setStats(data);
       } catch (error) {

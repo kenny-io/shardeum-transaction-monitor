@@ -1,14 +1,11 @@
 import { useState, useEffect } from 'react';
 import { Fuel } from 'lucide-react';
+import { API_URL } from '../config/api';
 
 interface GasMetrics {
   averageGasPrice: number;
   totalGasUsed: number;
 }
-
-const API_URL = process.env.NODE_ENV === 'production' 
-  ? `${import.meta.env.VITE_API_URL}`
-  : 'http://localhost:3000/api';
 
 export function GasMetricsCard() {
   const [metrics, setMetrics] = useState<GasMetrics | null>(null);

@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Clock } from 'lucide-react';
-
+import { API_URL } from '../config/api';
 interface SpeedMetrics {
   averageConfirmationTime: number;
   fastestTransaction: number;
@@ -14,7 +14,7 @@ export function TransactionSpeedCard() {
   useEffect(() => {
     const fetchMetrics = async () => {
       try {
-        const response = await fetch('http://localhost:3000/api/metrics/speed');
+        const response = await fetch(`${API_URL}/metrics/speed`);
         if (!response.ok) {
           throw new Error(`HTTP error! status: ${response.status}`);
         }

@@ -4,7 +4,7 @@ import { Activity } from 'lucide-react';
 import { SuccessRateCard } from './components/SuccessRateCard';
 import { GasMetricsCard } from './components/GasMetricsCard';
 import { TransactionSpeedCard } from './components/TransactionSpeedCard';
-
+import { API_URL } from './config/api';
 interface MetricData {
   timestamp: number;
   value: number;
@@ -27,7 +27,7 @@ function App() {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const timesRes = await fetch('http://localhost:3000/api/metrics/confirmation-times');
+        const timesRes = await fetch(`${API_URL}/metrics/confirmation-times`);
         const times = await timesRes.json();
         setConfirmationTimes(filterLastHourData(times));
         setLastUpdate(new Date());
