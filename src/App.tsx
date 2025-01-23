@@ -10,14 +10,13 @@ interface MetricData {
   value: number;
 }
 
-interface TransactionCounts {
-  success: number;
-  failure: number;
-}
+// Get the API URL from environment variables
+const API_URL = import.meta.env.VITE_PUBLIC_API_URL || 'http://localhost:3001/api';
 
 function App() {
   const [confirmationTimes, setConfirmationTimes] = useState<MetricData[]>([]);
   const [lastUpdate, setLastUpdate] = useState<Date>(new Date());
+  const [error, setError] = useState<string | null>(null);
 
   const filterLastHourData = (data: MetricData[]) => {
     const oneHourAgo = Math.floor(Date.now() / 1000) - 3600;
@@ -27,12 +26,17 @@ function App() {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const timesRes = await fetch('http://localhost:3000/api/metrics/confirmation-times');
+        const timesRes = await fetch(`${API_URL}/metrics/confirmation-times`);
+        if (!timesRes.ok) {
+          throw new Error(`HTTP error! status: ${timesRes.status}`);
+        }
         const times = await timesRes.json();
         setConfirmationTimes(filterLastHourData(times));
         setLastUpdate(new Date());
+        setError(null);
       } catch (error) {
         console.error('Failed to fetch metrics:', error);
+        setError('Failed to fetch metrics. Please check your connection.');
       }
     };
 
@@ -62,15 +66,21 @@ function App() {
       </nav>
 
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        {error && (
+          <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded mb-6">
+            {error}
+          </div>
+        )}
+
         {/* Transaction Summary Section */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
-          <SuccessRateCard />
-          <TransactionSpeedCard />
+          <SuccessRateCard apiUrl={API_URL} />
+          <TransactionSpeedCard apiUrl={API_URL} />
         </div>
 
         {/* Gas Metrics Section */}
         <div className="mb-6">
-          <GasMetricsCard />
+          <GasMetricsCard apiUrl={API_URL} />
         </div>
 
         {/* Confirmation Times Chart */}

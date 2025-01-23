@@ -6,15 +6,14 @@ interface GasMetrics {
   totalGasUsed: number;
 }
 
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000/api';
 
-export function GasMetricsCard() {
+export function GasMetricsCard({ apiUrl }: { apiUrl: string }) {
   const [metrics, setMetrics] = useState<GasMetrics | null>(null);
 
   useEffect(() => {
     const fetchMetrics = async () => {
       try {
-        const response = await fetch(`${API_URL}/metrics/gas`, {
+        const response = await fetch(`${apiUrl}/metrics/gas`, {
           credentials: 'include',
           headers: {
             'Content-Type': 'application/json'

@@ -8,13 +8,13 @@ interface TransactionCounts {
   successRate: number;
 }
 
-export function SuccessRateCard() {
+export function SuccessRateCard({ apiUrl }: { apiUrl: string }) {
   const [stats, setStats] = useState<TransactionCounts | null>(null);
 
   useEffect(() => {
     const fetchStats = async () => {
       try {
-        const response = await fetch('http://localhost:3000/api/metrics/transaction-counts');
+        const response = await fetch(`${apiUrl}/api/metrics/transaction-counts`);
         const data = await response.json();
         setStats(data);
       } catch (error) {
