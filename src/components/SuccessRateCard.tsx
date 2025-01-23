@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { CheckCircle2, XCircle, PieChart } from 'lucide-react';
 import { API_URL } from '../config/api';
+
 interface TransactionCounts {
   success: number;
   failure: number;
@@ -43,7 +44,10 @@ export function SuccessRateCard() {
 
   return (
     <div className="bg-white rounded-lg shadow p-6 mt-6">
-        <h2 className="text-lg font-semibold text-gray-900 mb-4">Transaction Summary</h2>
+      <div className="flex justify-between items-center mb-4">
+        <h2 className="text-lg font-semibold text-gray-900">Transaction Summary</h2>
+        <span className="text-sm text-gray-500">Last 1 hour</span>
+      </div>
       <div className="flex items-center justify-between mb-6">
         <div className="flex items-center">
           <PieChart className="h-6 w-6 text-indigo-600 mr-2" />

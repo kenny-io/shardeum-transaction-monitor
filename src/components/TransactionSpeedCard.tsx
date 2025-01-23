@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Clock } from 'lucide-react';
 import { API_URL } from '../config/api';
+
 interface SpeedMetrics {
   averageConfirmationTime: number;
   fastestTransaction: number;

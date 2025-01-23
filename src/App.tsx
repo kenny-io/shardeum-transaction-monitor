@@ -75,7 +75,10 @@ function App() {
 
         {/* Confirmation Times Chart */}
         <div className="bg-white rounded-lg shadow p-6">
-          <h2 className="text-lg font-semibold text-gray-900 mb-4">Confirmation Times (Last Hour)</h2>
+          <div className="flex justify-between items-center mb-4">
+            <h2 className="text-lg font-semibold text-gray-900">Confirmation Times</h2>
+            <span className="text-sm text-gray-500">Last Hour</span>
+          </div>
           <div className="h-96">
             <ResponsiveContainer width="100%" height="100%">
               <LineChart data={confirmationTimes}>

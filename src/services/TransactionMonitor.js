@@ -136,7 +136,10 @@ export class TransactionMonitor {
       this.metrics.pending.set(this.pendingTxs.size);
     } catch (error) {
       console.error('Transaction error:', error);
+      const timestamp = Math.floor(Date.now() / 1000);
+      this.transactionHistory.failure.set(timestamp, 1);
       this.metrics.failure.inc();
+      this.lastError = error.message || 'Unknown error';
     }
   }
 
@@ -169,7 +172,7 @@ export class TransactionMonitor {
   }
 
   cleanupOldData() {
-    const oneHourAgo = Math.floor(Date.now() / 1000) - 3600;
+    const oneHourAgo = Math.floor(Date.now() / 1000) - 3600;  
     
     // Cleanup old data from all history maps
     [
