@@ -3,13 +3,19 @@ import cors from 'cors';
 import { TransactionMonitor } from './src/services/TransactionMonitor.js';
 import { Registry } from 'prom-client';
 import dotenv from 'dotenv';
+import path from 'path';
+import { fileURLToPath } from 'url';
 
 dotenv.config();
 
 const app = express();
+const router = express.Router();  // Create router
 const port = process.env.PORT || 3000;
 const register = new Registry();
 const monitor = new TransactionMonitor(register);
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 // Simplified CORS setup
 app.use(cors());
@@ -31,15 +37,15 @@ app.get('/metrics', asyncHandler(async (req, res) => {
 }));
 
 // API endpoints with error handling
-app.get('/api/metrics/confirmation-times', asyncHandler(async (req, res) => {
+router.get('/metrics/confirmation-times', asyncHandler(async (req, res) => {
   res.json(monitor.getConfirmationTimes());
 }));
 
-app.get('/api/metrics/transaction-counts', asyncHandler(async (req, res) => {
+router.get('/metrics/transaction-counts', asyncHandler(async (req, res) => {
   res.json(monitor.getTransactionCounts());
 }));
 
-app.get('/api/metrics/gas', asyncHandler(async (req, res) => {
+router.get('/metrics/gas', asyncHandler(async (req, res) => {
   const avgGasPrice = monitor.getAverageGasPrice();
   const totalGasUsed = monitor.getTotalGasUsed();
   
@@ -49,7 +55,7 @@ app.get('/api/metrics/gas', asyncHandler(async (req, res) => {
   });
 }));
 
-app.get('/api/metrics/speed', asyncHandler(async (req, res) => {
+router.get('/metrics/speed', asyncHandler(async (req, res) => {
   res.json({
     averageConfirmationTime: monitor.getAverageConfirmationTime(),
     fastestTransaction: monitor.getFastestTransaction(),
@@ -57,6 +63,18 @@ app.get('/api/metrics/speed', asyncHandler(async (req, res) => {
     pendingTransactions: monitor.getPendingTransactionCount()
   });
 }));
+
+// Mount API routes
+app.use('/api', router);
+
+// Serve static files from the React app
+app.use(express.static(path.join(__dirname, 'dist')));
+
+// The "catchall" handler: for any request that doesn't
+// match one above, send back React's index.html file.
+app.get('*', (req, res) => {
+  res.sendFile(path.join(__dirname, 'dist', 'index.html'));
+});
 
 // Error handling middleware
 app.use((err, req, res, next) => {

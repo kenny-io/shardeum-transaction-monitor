@@ -12,7 +12,7 @@ export function GasMetricsCard() {
   useEffect(() => {
     const fetchMetrics = async () => {
       try {
-        const response = await fetch('http://localhost:3000/api/metrics/gas');
+        const response = await fetch('/api/metrics/gas');
         if (!response.ok) {
           throw new Error(`HTTP error! status: ${response.status}`);
         }

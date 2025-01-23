@@ -2,16 +2,25 @@ version: '3.8'
 
 services:
   app:
-    build: .
+    build: 
+      context: .
+      dockerfile: Dockerfile
     ports:
       - "3000:3000"
+      - "5173:5173"  # Expose Vite dev server port
     environment:
+      - NODE_ENV=production
       - SHARDEUM_RPC_URL=${SHARDEUM_RPC_URL}
-      - SENDER_PRIVATE_KEY=${SENDER_PRIVATE_KEY}
-      - RECEIVER_ADDRESS=${RECEIVER_ADDRESS}
+      - PRIMARY_SENDER_PRIVATE_KEY=${PRIMARY_SENDER_PRIVATE_KEY}
+      - PRIMARY_RECEIVER_ADDRESS=${PRIMARY_RECEIVER_ADDRESS}
+      - SECONDARY_SENDER_PRIVATE_KEY=${SECONDARY_SENDER_PRIVATE_KEY}
+      - SECONDARY_RECEIVER_ADDRESS=${SECONDARY_RECEIVER_ADDRESS}
       - TRANSACTION_AMOUNT=${TRANSACTION_AMOUNT}
       - MONITOR_INTERVAL=${MONITOR_INTERVAL}
       - PORT=3000
+      - VITE_API_URL=/api  # Use relative path for API
+    networks:
+      - monitor-network
 
   prometheus:
     image: prom/prometheus:latest
@@ -19,3 +28,18 @@ services:
       - "9090:9090"
     volumes:
       - ./prometheus.yml:/etc/prometheus/prometheus.yml
+      - prometheus_data:/prometheus
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--web.console.libraries=/usr/share/prometheus/console_libraries'
+      - '--web.console.templates=/usr/share/prometheus/consoles'
+    networks:
+      - monitor-network
+
+volumes:
+  prometheus_data:
+
+networks:
+  monitor-network:
+    driver: bridge
