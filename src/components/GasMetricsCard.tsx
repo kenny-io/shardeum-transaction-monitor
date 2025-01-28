@@ -58,13 +58,13 @@ export function GasMetricsCard() {
   };
 
   return (
-    <div className="bg-white dark:bg-gray-800 shadow rounded-lg p-6">
+    <div className="bg-white dark:bg-gray-800 shadow rounded-lg p-4 sm:p-6">
       <div className="flex items-center mb-4">
         <Fuel className="h-6 w-6 text-indigo-600 dark:text-indigo-400 mr-2" />
         <h2 className="text-lg font-semibold text-gray-900 dark:text-white">Gas Metrics</h2>
       </div>
       
-      <div className="grid grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         <div className="bg-purple-50 dark:bg-purple-900/20 rounded-lg p-4">
           <div className="text-sm font-medium text-purple-700 dark:text-purple-300">
             Average Gas Price

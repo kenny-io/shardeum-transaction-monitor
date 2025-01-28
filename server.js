@@ -68,6 +68,10 @@ router.get('/metrics/speed', asyncHandler(async (req, res) => {
   });
 }));
 
+router.get('/metrics/last-error', asyncHandler(async (req, res) => {
+  res.json({ error: monitor.getLastError() });
+}));
+
 // Mount API routes
 app.use('/api', router);
 

@@ -43,3 +43,7 @@ Thumbs.db
 # ENV
 .env
 
+# Log files
+transaction-monitor.log
+logs/
+

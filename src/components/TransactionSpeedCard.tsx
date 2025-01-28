@@ -42,13 +42,15 @@ export function TransactionSpeedCard() {
   }
 
   return (
-    <div className="bg-white dark:bg-gray-800 shadow rounded-lg p-6">
+    <div className="bg-white dark:bg-gray-800 shadow rounded-lg p-4 sm:p-6">
       <div className="flex items-center mb-4">
-        <Clock className="h-6 w-6 text-indigo-600 dark:text-indigo-400 mr-2" />
-        <h2 className="text-lg font-semibold text-gray-900 dark:text-white">Transaction Speed</h2>
+        <Clock className="h-5 w-5 sm:h-6 sm:w-6 text-indigo-600 dark:text-indigo-400 mr-2" />
+        <h2 className="text-base sm:text-lg font-semibold text-gray-900 dark:text-white">
+          Transaction Speed
+        </h2>
       </div>
 
-      <div className="grid grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
         <div className="bg-emerald-50 dark:bg-emerald-900/20 rounded-lg p-4">
           <div className="text-sm font-medium text-emerald-700 dark:text-emerald-300">
             Average Confirmation
