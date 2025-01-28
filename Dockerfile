@@ -19,6 +19,7 @@ RUN npm install --production
 COPY --from=builder /app/dist ./dist
 COPY server.js .
 COPY src/services ./src/services
+COPY src/utils ./src/utils
 COPY prometheus.yml /etc/prometheus/prometheus.yml
 
 ENV NODE_ENV=production
