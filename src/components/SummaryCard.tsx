@@ -43,10 +43,14 @@ export function SummaryCard() {
   };
 
   return (
-    <div className="bg-white dark:bg-gray-800 shadow rounded-lg p-6 mt-6">
-      <div className="flex justify-between items-center mb-4">
-        <h2 className="text-lg font-semibold text-gray-900 dark:text-white">Transaction Summary</h2>
-        <span className="text-sm text-gray-500 dark:text-gray-400">Last 1 hour</span>
+    <div className="bg-white dark:bg-gray-800 shadow rounded-lg p-4 sm:p-6">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4">
+        <h2 className="text-base sm:text-lg font-semibold text-gray-900 dark:text-white">
+          Transaction Summary
+        </h2>
+        <span className="text-xs sm:text-sm text-gray-500 dark:text-gray-400 mt-1 sm:mt-0">
+          Last 1 hour
+        </span>
       </div>
       <div className="flex items-center justify-between mb-6">
         <div className="flex items-center">

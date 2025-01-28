@@ -1,44 +1,59 @@
-import { ethers } from 'ethers';
+import { 
+  createPublicClient, 
+  createWalletClient, 
+  http, 
+  parseEther, 
+  formatEther,
+  formatGwei,
+  parseGwei
+} from 'viem';
+import { privateKeyToAccount } from 'viem/accounts';
 import 'dotenv/config';
 import { Histogram, Counter, Gauge } from 'prom-client';
+import { logger } from '../utils/logger.js';
 
 export class TransactionMonitor {
   constructor(register) {
     this.monitoringInterval = parseInt(process.env.MONITOR_INTERVAL || "60000");
-    this.provider = new ethers.JsonRpcProvider(
-      process.env.SHARDEUM_RPC_URL,
-      undefined,
-      {
-        batchMaxCount: 1,
-        polling: true,
-        staticNetwork: true,
-        cacheTimeout: -1,
-        fetchOptions: {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          cache: 'no-cache'
-        }
-      }
-    );
+    
+    this.publicClient = createPublicClient({
+      transport: http(process.env.SHARDEUM_RPC_URL, {
+        batch: false,
+        headers: { 'Content-Type': 'application/json' },
+      })
+    });
 
-    // Initialize both wallet pairs
+    // Ensure private key has 0x prefix
+    const formatPrivateKey = (key) => {
+      if (!key) throw new Error('Private key is required');
+      return key.startsWith('0x') ? key : `0x${key}`;
+    };
+
+    // Initialize wallet clients for both pairs
     this.walletPairs = [
       {
-        signer: new ethers.Wallet(process.env.PRIMARY_SENDER_PRIVATE_KEY, this.provider),
+        client: createWalletClient({
+          account: privateKeyToAccount(formatPrivateKey(process.env.PRIMARY_SENDER_PRIVATE_KEY)),
+          transport: http(process.env.SHARDEUM_RPC_URL)
+        }),
         receiverAddress: process.env.PRIMARY_RECEIVER_ADDRESS
       },
       {
-        signer: new ethers.Wallet(process.env.SECONDARY_SENDER_PRIVATE_KEY, this.provider),
+        client: createWalletClient({
+          account: privateKeyToAccount(formatPrivateKey(process.env.SECONDARY_SENDER_PRIVATE_KEY)),
+          transport: http(process.env.SHARDEUM_RPC_URL)
+        }),
         receiverAddress: process.env.SECONDARY_RECEIVER_ADDRESS
       }
     ];
 
     this.currentWalletIndex = 0;
     this.lastWalletSwitch = Date.now();
-    this.amount = ethers.parseEther(process.env.TRANSACTION_AMOUNT || "0.001");
+    this.amount = parseEther(process.env.TRANSACTION_AMOUNT || "0.001");
     
     this.initializeMetrics(register);
     this.initializeTracking();
+    this.lastError = null;
   }
 
   initializeMetrics(register) {
@@ -81,9 +96,8 @@ export class TransactionMonitor {
   }
 
   getCurrentWallet() {
-    // Switch wallet every hour
     const now = Date.now();
-    if (now - this.lastWalletSwitch >= 3600000) { // 1 hour in milliseconds
+    if (now - this.lastWalletSwitch >= 3600000) {
       this.currentWalletIndex = (this.currentWalletIndex + 1) % 2;
       this.lastWalletSwitch = now;
     }
@@ -100,46 +114,61 @@ export class TransactionMonitor {
 
   async sendMonitoringTransaction() {
     try {
-      console.log('Attempting to send monitoring transaction...');
-      const { signer, receiverAddress } = this.getCurrentWallet();
-      const gasPrice = await this.provider.getFeeData();
-      console.log('Current gas price:', ethers.formatUnits(gasPrice.gasPrice, "gwei"), 'Gwei');
+      logger.info('Attempting to send monitoring transaction...');
+      const { client, receiverAddress } = this.getCurrentWallet();
+      
+      // Get gas price using legacy method
+      const gasPrice = await this.publicClient.getGasPrice();
+      logger.info(`Current gas price: ${formatGwei(gasPrice)} Gwei`);
       
       const tx = {
         to: receiverAddress,
         value: this.amount,
-        gasLimit: 21000n,
-        maxFeePerGas: gasPrice.maxFeePerGas,
-        maxPriorityFeePerGas: gasPrice.maxPriorityFeePerGas
+        gas: 21000n,
+        gasPrice 
       };
 
-      console.log('Sending transaction to:', receiverAddress);
+      logger.info(`Sending transaction to: ${receiverAddress}`);
       const startTime = Date.now();
-      const transaction = await signer.sendTransaction(tx);
-      console.log('Transaction sent:', transaction.hash);
       
-      this.pendingTxs.set(transaction.hash, { 
+      // Send transaction 
+      const hash = await client.sendTransaction(tx);
+      logger.info(`Transaction sent: ${hash}`);
+      
+      this.pendingTxs.set(hash, { 
         startTime,
         status: 'pending',
-        gasPrice: gasPrice.gasPrice
+        gasPrice
       });
       this.metrics.pending.set(this.pendingTxs.size);
 
-      const receipt = await transaction.wait();
+      // Wait for transaction receipt
+      const receipt = await this.publicClient.waitForTransactionReceipt({ hash });
       const timestamp = Math.floor(Date.now() / 1000);
       const confirmationTime = (Date.now() - startTime) / 1000;
       
-      this.updateMetrics(receipt, timestamp, confirmationTime, gasPrice.gasPrice);
+      logger.info(`Transaction confirmed in ${confirmationTime} seconds`);
+      
+      this.updateMetrics(receipt, timestamp, confirmationTime, gasPrice);
       this.cleanupOldData();
       
-      this.pendingTxs.delete(transaction.hash);
+      this.pendingTxs.delete(hash);
       this.metrics.pending.set(this.pendingTxs.size);
     } catch (error) {
-      console.error('Transaction error:', error);
+      logger.error('Transaction failed', {
+        message: error.message,
+        timestamp: new Date().toISOString(),
+        walletIndex: this.currentWalletIndex,
+        stack: error.stack
+      });
+      
       const timestamp = Math.floor(Date.now() / 1000);
       this.transactionHistory.failure.set(timestamp, 1);
       this.metrics.failure.inc();
-      this.lastError = error.message || 'Unknown error';
+      this.lastError = {
+        message: error.message || 'Unknown error',
+        timestamp: new Date().toISOString()
+      };
     }
   }
 
@@ -149,12 +178,10 @@ export class TransactionMonitor {
     
     this.gasUsageHistory.set(timestamp, gasPrice);
     
-    const gasUsedBigInt = BigInt(receipt.gasUsed.toString());
-    this.totalGasUsed += gasUsedBigInt * gasPrice;
-
+    this.totalGasUsed += receipt.gasUsed * gasPrice;
     this.transactionHistory.confirmationTimes.set(timestamp, confirmationTime);
 
-    if (receipt.status === 1) {
+    if (receipt.status === 'success') {
       this.transactionHistory.success.set(timestamp, 1);
       this.metrics.success.inc();
     } else {
@@ -174,7 +201,6 @@ export class TransactionMonitor {
   cleanupOldData() {
     const oneHourAgo = Math.floor(Date.now() / 1000) - 3600;  
     
-    // Cleanup old data from all history maps
     [
       this.transactionHistory.success,
       this.transactionHistory.failure,
@@ -218,9 +244,8 @@ export class TransactionMonitor {
     const prices = Array.from(this.gasUsageHistory.values());
     if (prices.length === 0) return 0;
     
-    // Convert all BigInts to Gwei before averaging
     const pricesInGwei = prices.map(price => 
-      Number(ethers.formatUnits(price, "gwei"))
+      Number(formatGwei(price))
     );
     
     const avgPrice = pricesInGwei.reduce((a, b) => a + b, 0) / prices.length;
@@ -235,7 +260,7 @@ export class TransactionMonitor {
   getTotalGasUsed() {
     if (this.totalGasUsed === 0n) return 0;
     
-    const totalGasGwei = Number(ethers.formatUnits(this.totalGasUsed, "gwei"));
+    const totalGasGwei = Number(formatGwei(this.totalGasUsed));
     console.log('Total gas calculation:', {
       rawTotal: this.totalGasUsed.toString(),
       inGwei: totalGasGwei
@@ -243,7 +268,7 @@ export class TransactionMonitor {
     return totalGasGwei;
   }
 
-  // Methods for speed metrics
+ 
   getAverageConfirmationTime() {
     const times = Array.from(this.transactionHistory.confirmationTimes.values());
     const avgTime = times.length > 0 
@@ -269,4 +294,9 @@ export class TransactionMonitor {
     console.log('Pending transactions:', pending);
     return pending;
   }
+
+  getLastError() {
+    return this.lastError;
+  }
 }
+
