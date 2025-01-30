@@ -19,7 +19,9 @@ export class TransactionMonitor {
     this.publicClient = createPublicClient({
       transport: http(process.env.SHARDEUM_RPC_URL, {
         batch: false,
-        headers: { 'Content-Type': 'application/json' },
+        retryCount: 0,
+        retryDelay: 0, 
+        headers: { 'Content-Type': 'application/json' }
       })
     });
 
@@ -34,14 +36,20 @@ export class TransactionMonitor {
       {
         client: createWalletClient({
           account: privateKeyToAccount(formatPrivateKey(process.env.PRIMARY_SENDER_PRIVATE_KEY)),
-          transport: http(process.env.SHARDEUM_RPC_URL)
+          transport: http(process.env.SHARDEUM_RPC_URL, {
+            retryCount: 0,
+            retryDelay: 0  
+          })
         }),
         receiverAddress: process.env.PRIMARY_RECEIVER_ADDRESS
       },
       {
         client: createWalletClient({
           account: privateKeyToAccount(formatPrivateKey(process.env.SECONDARY_SENDER_PRIVATE_KEY)),
-          transport: http(process.env.SHARDEUM_RPC_URL)
+          transport: http(process.env.SHARDEUM_RPC_URL, {
+            retryCount: 0,
+            retryDelay: 0 
+          })
         }),
         receiverAddress: process.env.SECONDARY_RECEIVER_ADDRESS
       }
