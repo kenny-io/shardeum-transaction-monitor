@@ -123,7 +123,7 @@ function App() {
                     }}
                   />
                   <Line
-                    type="monotone"
+                    type="linear"
                     dataKey="value"
                     stroke="#818CF8"
                     strokeWidth={2}
