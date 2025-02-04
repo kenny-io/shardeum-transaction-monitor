@@ -37,7 +37,7 @@ export function GasMetricsCard() {
 
   if (!metrics) {
     return (
-      <div className="bg-white dark:bg-gray-800 shadow rounded-lg p-6 h-[200px] flex items-center justify-center">
+      <div className="bg-white dark:bg-gray-800 shadow rounded-lg p-4 sm:p-6 h-[200px] flex items-center justify-center">
         <div className="animate-pulse text-gray-400">Loading gas metrics...</div>
       </div>
     );
@@ -60,20 +60,22 @@ export function GasMetricsCard() {
   return (
     <div className="bg-white dark:bg-gray-800 shadow rounded-lg p-4 sm:p-6">
       <div className="flex items-center mb-4">
-        <Fuel className="h-6 w-6 text-indigo-600 dark:text-indigo-400 mr-2" />
-        <h2 className="text-lg font-semibold text-gray-900 dark:text-white">Gas Metrics</h2>
+        <Fuel className="h-5 w-5 sm:h-6 sm:w-6 text-indigo-600 dark:text-indigo-400 mr-2" />
+        <h2 className="text-base sm:text-lg font-semibold text-gray-900 dark:text-white">
+          Gas Metrics
+        </h2>
       </div>
       
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        <div className="bg-purple-50 dark:bg-purple-900/20 rounded-lg p-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <div className="bg-purple-50 dark:bg-purple-900/20 rounded-lg p-3 sm:p-4">
           <div className="text-sm font-medium text-purple-700 dark:text-purple-300">
             Average Gas Price
           </div>
-          <div className="mt-2">
-            <span className="text-2xl font-semibold text-purple-700 dark:text-purple-300">
+          <div className="mt-2 flex flex-col sm:flex-row sm:items-baseline">
+            <span className="text-xl sm:text-2xl font-semibold text-purple-700 dark:text-purple-300">
               {formatGasValue(metrics.averageGasPrice)}
             </span>
-            <span className="text-sm text-purple-600 dark:text-purple-400 ml-1">
+            <span className="text-xs sm:text-sm text-purple-600 dark:text-purple-400 sm:ml-1">
               nano Gwei
             </span>
           </div>
@@ -82,13 +84,17 @@ export function GasMetricsCard() {
           </div>
         </div>
 
-        <div className="bg-indigo-50 dark:bg-indigo-900/20 rounded-lg p-4">
-          <div className="text-sm font-medium text-indigo-700 dark:text-indigo-300">Total Gas Used</div>
-          <div className="mt-2">
-            <span className="text-2xl font-semibold text-indigo-700 dark:text-indigo-300">
+        <div className="bg-indigo-50 dark:bg-indigo-900/20 rounded-lg p-3 sm:p-4">
+          <div className="text-sm font-medium text-indigo-700 dark:text-indigo-300">
+            Total Gas Used
+          </div>
+          <div className="mt-2 flex flex-col sm:flex-row sm:items-baseline">
+            <span className="text-xl sm:text-2xl font-semibold text-indigo-700 dark:text-indigo-300">
               {formatGasValue(metrics.totalGasUsed)}
             </span>
-            <span className="text-sm text-indigo-600 dark:text-indigo-400 ml-1">nano Gwei</span>
+            <span className="text-xs sm:text-sm text-indigo-600 dark:text-indigo-400 sm:ml-1">
+              nano Gwei
+            </span>
           </div>
           <div className="text-xs text-indigo-500 mt-1">
             ≈ {(metrics.totalGasUsed / 1e9).toFixed(9)} Gwei
