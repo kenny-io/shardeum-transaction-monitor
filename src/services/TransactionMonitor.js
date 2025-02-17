@@ -103,12 +103,51 @@ export class TransactionMonitor {
     this.slowestTx = 0;
   }
 
-  getCurrentWallet() {
-    const now = Date.now();
-    if (now - this.lastWalletSwitch >= 3600000) {
-      this.currentWalletIndex = (this.currentWalletIndex + 1) % 2;
-      this.lastWalletSwitch = now;
+  async checkWalletBalance(walletPair) {
+    try {
+      const account = walletPair.client.account;
+      const balance = await this.publicClient.getBalance({
+        address: account.address,
+      });
+      
+      // Add buffer for gas (21000 gas * current gas price)
+      const gasPrice = await this.publicClient.getGasPrice();
+      const gasCost = gasPrice * 21000n;
+      const requiredAmount = this.amount + gasCost;
+      
+      return balance >= requiredAmount;
+    } catch (error) {
+      logger.error('Failed to check wallet balance', error);
+      return false;
     }
+  }
+
+  async getCurrentWallet() {
+    const now = Date.now();
+    const currentWallet = this.walletPairs[this.currentWalletIndex];
+    
+    // Check if current wallet has sufficient balance
+    const hasBalance = await this.checkWalletBalance(currentWallet);
+    
+    // Switch wallet if current wallet is low on funds or has been active for an hour
+    if (!hasBalance || (now - this.lastWalletSwitch >= 3600000)) { // 1 hour
+      // Try the other wallet
+      const otherIndex = (this.currentWalletIndex + 1) % 2;
+      const otherWallet = this.walletPairs[otherIndex];
+      
+      // Check if other wallet has sufficient balance
+      const otherHasBalance = await this.checkWalletBalance(otherWallet);
+      
+      if (otherHasBalance) {
+        this.currentWalletIndex = otherIndex;
+        this.lastWalletSwitch = now;
+        logger.info(`Switched to wallet ${otherIndex} due to ${!hasBalance ? 'insufficient balance' : 'time rotation'}`);
+      } else if (!hasBalance) {
+        // If both wallets are insufficient, log error but keep current wallet
+        logger.error('Both wallets have insufficient balance');
+      }
+    }
+    
     return this.walletPairs[this.currentWalletIndex];
   }
 
@@ -123,7 +162,7 @@ export class TransactionMonitor {
   async sendMonitoringTransaction() {
     try {
       logger.info('Attempting to send monitoring transaction...');
-      const { client, receiverAddress } = this.getCurrentWallet();
+      const { client, receiverAddress } = await this.getCurrentWallet();
       
       // Get gas price using legacy method
       const gasPrice = await this.publicClient.getGasPrice();
